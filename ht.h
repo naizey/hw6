@@ -344,6 +344,14 @@ size_t HashTable<K,V,Prober,Hash,KEqual>::size() const
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 {
+
+    //check if resizing is necessary - if the load factor has gone above the threshold
+    double lf = double(spotsUsed_ + 1) / double(table_.size());
+    if(lf > resizeAlpha_)
+    {
+        //if the number of spots used over table size is > threshold, resize
+        resize();
+    }
     //if resize is not necessary, then insert
     //allocate a HashItem, if no loc is available, throw logic error
     HASH_INDEX_T loc = probe(p.first);
@@ -357,36 +365,20 @@ void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
         table_[loc]->item.second = p.second;
         return;
     }
-
-
-    //check if resizing is necessary - if the load factor has gone above the threshold
-    double lf = double(spotsUsed_ + (table_[loc] == nullptr ? 1 : 0)) / double(table_.size());
-    if(lf > resizeAlpha_)
-    {
-        //if the number of spots used over table size is > threshold, resize
-        resize();
-
-        loc = probe(p.first);
-        if(loc == npos)
-        {
-            throw std::logic_error("No loc available after resize");
-        }
-    }
-
     //if there is no error thrown, can insert
     //if spot is empty
     if(table_[loc] != nullptr && table_[loc]->deleted)
     {
         delete table_[loc];
+        table_[loc] = new HashItem(p);
         currSize_++;
     }
-    else if(table_[loc] == nullptr)
+    else 
     {
-        spotsUsed_++;
+        table_[loc] = new HashItem(p);
         currSize_++;
+        spotsUsed_++;
     }
-    
-    table_[loc] = new HashItem(p);
 
 }
 
@@ -492,27 +484,17 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
     currSize_ = 0;
     spotsUsed_ = 0;
 
-    //ADDING 
-    std::vector<ItemType> rehash;
     //rehash prev table with new table
     for(size_t i = 0; i < prevTable.size(); ++i)
     {
         HashItem* pair = prevTable[i];
         //if it exists (not empty) and is not deleted
-        if(pair != nullptr && !pair->deleted)
+        if(pair && !pair->deleted)
         {
             //insert
-            //insert(pair->item);
-            //ADDING
-            rehash.push_back(pair->item);
+            insert(pair->item);
         }
         delete pair;
-    }
-
-    //ADDING
-    for(size_t i = 0; i < rehash.size(); ++i)
-    {
-        insert(rehash[i]);
     }
     
 }
@@ -534,7 +516,7 @@ HASH_INDEX_T HashTable<K,V,Prober,Hash,KEqual>::probe(const KeyType& key) const
         // fill in the condition for this else if statement which should 
         // return 'loc' if the given key exists at this location
         //og condition kequal_(table_[loc]->item.first, key) && !table_[loc]->deleted
-        else if(table_[loc] != nullptr && kequal_(table_[loc]->item.first, key) && !table_[loc]->deleted) {
+        else if(table_[loc] != nullptr && !table_[loc]->deleted && kequal_(table_[loc]->item.first, key)) {
             return loc;
         }
         loc = prober_.next();
