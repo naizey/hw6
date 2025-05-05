@@ -361,7 +361,7 @@ void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 
     //check if resizing is necessary - if the load factor has gone above the threshold
     double lf = static_cast<double>(spotsUsed_ + (table_[loc] == nullptr ? 1 : 0)) / static_cast<double>(table_.size());
-    if(lf > resizeAlpha_)
+    if(lf >= resizeAlpha_)
     {
         //if the number of spots used over table size is > threshold, resize
         resize();
@@ -523,7 +523,8 @@ HASH_INDEX_T HashTable<K,V,Prober,Hash,KEqual>::probe(const KeyType& key) const
         }
         // fill in the condition for this else if statement which should 
         // return 'loc' if the given key exists at this location
-        else if(kequal_(table_[loc]->item.first, key) && !table_[loc]->deleted) {
+        //og condition kequal_(table_[loc]->item.first, key) && !table_[loc]->deleted
+        else if(table_[loc] != nullptr && kequal_(table_[loc]->item.first, key) && !table_[loc]->deleted) {
             return loc;
         }
         loc = prober_.next();
