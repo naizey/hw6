@@ -345,72 +345,35 @@ template<typename K, typename V, typename Prober, typename Hash, typename KEqual
 void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 {
 
-    // //check if resizing is necessary - if the load factor has gone above the threshold
-    // double lf = double(spotsUsed_ + 1) / double(table_.size());
-    // if(lf > resizeAlpha_)
-    // {
-    //     //if the number of spots used over table size is > threshold, resize
-    //     resize();
-    // }
-    // //if resize is not necessary, then insert
-    // //allocate a HashItem, if no loc is available, throw logic error
-    // HASH_INDEX_T loc = probe(p.first);
-    // if(loc == npos)
-    // {
-    //     throw std::logic_error("No location available to insert");
-    // }
-
-    // if(table_[loc] != nullptr && !table_[loc]->deleted)
-    // {
-    //     table_[loc]->item.second = p.second;
-    //     return;
-    // }
-    // //if there is no error thrown, can insert
-    // //if spot is empty
-    // if(table_[loc] != nullptr && table_[loc]->deleted)
-    // {
-    //     delete table_[loc];
-    //     table_[loc] = new HashItem(p);
-    //     currSize_++;
-    // }
-    // else 
-    // {
-    //     table_[loc] = new HashItem(p);
-    //     currSize_++;
-    //     spotsUsed_++;
-    // }
-
+    //check if resizing is necessary - if the load factor has gone above the threshold
+    double lf = double(spotsUsed_ + 1) / double(table_.size());
+    if(lf > resizeAlpha_)
+    {
+        //if the number of spots used over table size is > threshold, resize
+        resize();
+    }
+    //if resize is not necessary, then insert
+    //allocate a HashItem, if no loc is available, throw logic error
     HASH_INDEX_T loc = probe(p.first);
     if(loc == npos)
     {
         throw std::logic_error("No location available to insert");
     }
 
-    if(table_[loc] != nullptr && !table_[loc]->deleted && kequal_(table_[loc]->item.first, p.first))
+    if(table_[loc] != nullptr && !table_[loc]->deleted)
     {
         table_[loc]->item.second = p.second;
         return;
     }
-
-    double lf = static_cast<double>(spotsUsed_ + (table_[loc] == nullptr ? 1 : 0)) / static_cast<double>(table_.size());
-    if(lf >= resizeAlpha_) 
-    {
-        resize();
-        loc = probe(p.first);
-        if(loc == npos)
-        {
-            throw std::logic_error("No location available to insert after resize");
-        }
-    }
-
+    //if there is no error thrown, can insert
+    //if spot is empty
     if(table_[loc] != nullptr && table_[loc]->deleted)
     {
         delete table_[loc];
         table_[loc] = new HashItem(p);
         currSize_++;
     }
-    // Handle the case of a nullptr spot (new)
-    else if(table_[loc] == nullptr)
+    else 
     {
         table_[loc] = new HashItem(p);
         currSize_++;
