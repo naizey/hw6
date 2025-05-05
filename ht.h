@@ -351,42 +351,42 @@ void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
     {
         throw std::logic_error("No location available to insert");
     }
-    if(table_[loc] == nullptr || table_[loc]->deleted)
-    {
-        //check if resizing is necessary - if the load factor has gone above the threshold
-        double lf = double(spotsUsed_ + 1) / double(table_.size());
-        if(lf > resizeAlpha_)
-        {
-            //if the number of spots used over table size is > threshold, resize
-            resize();
 
-            loc = probe(p.first);
-            if(loc == npos)
-            {
-                throw std::logic_error("No loc available after resize");
-            }
-        }
-
-        //if there is no error thrown, can insert
-        //if spot is empty
-        if(table_[loc] == nullptr)
-        {
-            table_[loc] = new HashItem(p); //allocate new HashItem
-            spotsUsed_++; //used another spot
-            currSize_++; //size increased
-        }
-        else if(table_[loc]->deleted)
-        {
-            delete table_[loc];
-            table_[loc] = new HashItem(p); //allocate new HashItem
-            currSize_++; //size incr
-        }
-    }
-    //if its not, thats the old key value being stored, update the value to the new key value. 
-    else
+    if(table_[loc] != nullptr && !table_[loc]->deleted)
     {
         table_[loc]->item.second = p.second;
+        return;
     }
+
+
+    //check if resizing is necessary - if the load factor has gone above the threshold
+    double lf = static_cast<double>(spotsUsed_ + 1) / static_cast<double>(table_.size());
+    if(lf >= resizeAlpha_)
+    {
+        //if the number of spots used over table size is > threshold, resize
+        resize();
+
+        loc = probe(p.first);
+        if(loc == npos)
+        {
+            throw std::logic_error("No loc available after resize");
+        }
+    }
+
+    //if there is no error thrown, can insert
+    //if spot is empty
+    if(table_[loc] != nullptr && table_[loc]->deleted)
+    {
+        delete table_[loc];
+        currSize_++;
+    }
+    else if(table_[loc] == nullptr)
+    {
+        spotsUsed_++;
+        currSize_++;
+    }
+    
+    table_[loc] = new HashItem(p);
 
 }
 
