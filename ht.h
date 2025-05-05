@@ -344,67 +344,38 @@ size_t HashTable<K,V,Prober,Hash,KEqual>::size() const
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 {
-
-    // //check if resizing is necessary - if the load factor has gone above the threshold
-    // double lf = double(spotsUsed_ + 1) / double(table_.size());
-    // if(lf > resizeAlpha_)
-    // {
-    //     //if the number of spots used over table size is > threshold, resize
-    //     resize();
-    // }
-    // //if resize is not necessary, then insert
-    // //allocate a HashItem, if no loc is available, throw logic error
-    // HASH_INDEX_T loc = probe(p.first);
-    // if(loc == npos)
-    // {
-    //     throw std::logic_error("No location available to insert");
-    // }
-
-    // if(table_[loc] != nullptr && !table_[loc]->deleted)
-    // {
-    //     table_[loc]->item.second = p.second;
-    //     return;
-    // }
-    // //if there is no error thrown, can insert
-    // //if spot is empty
-    // if(table_[loc] != nullptr && table_[loc]->deleted)
-    // {
-    //     delete table_[loc];
-    //     table_[loc] = new HashItem(p);
-    //     currSize_++;
-    // }
-    // else 
-    // {
-    //     table_[loc] = new HashItem(p);
-    //     currSize_++;
-    //     spotsUsed_++;
-    // }
-
-    // Check if resizing is necessary
-    double loadFactor = double(spotsUsed_) / double(table_.size());
-    if (loadFactor >= resizeAlpha_) {
+    //check if resizing is necessary - if the load factor has gone above the threshold
+    double lf = double(spotsUsed_) / double(table_.size());
+    if(lf >= resizeAlpha_) 
+    {
+        //if the number of spots used over table size is > threshold, resize
         resize();
     }
 
-    // Find the location to insert
+    //if resize is not necessary, then insert
+    //allocate a HashItem, if no loc is available, throw logic error
     HASH_INDEX_T loc = probe(p.first);
-    if (loc == npos) {
+    if(loc == npos) 
+    {
         throw std::logic_error("No location available to insert");
     }
 
-    // If the spot is already occupied and not deleted, update the value
-    if (table_[loc] != nullptr && !table_[loc]->deleted) {
-        table_[loc]->item.second = p.second;
+    //if spot is filled and not deleted, update the value
+    if(table_[loc] != nullptr && !table_[loc]->deleted) 
+    {
+        table_[loc]->item.second = p.second; //overwrites the old value
         return;
     }
 
-    // If the spot is marked as deleted, replace it
-    if (table_[loc] != nullptr && table_[loc]->deleted) {
+    //if spot is filled and deleted, delete and insert new item
+    if(table_[loc] != nullptr && table_[loc]->deleted) 
+    {
         delete table_[loc];
         table_[loc] = new HashItem(p);
         currSize_++;
-    } else {
-        // Otherwise, insert a new item
+    } 
+    else 
+    {
         table_[loc] = new HashItem(p);
         currSize_++;
         spotsUsed_++;
@@ -499,65 +470,32 @@ typename HashTable<K,V,Prober,Hash,KEqual>::HashItem* HashTable<K,V,Prober,Hash,
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 void HashTable<K,V,Prober,Hash,KEqual>::resize()
 {
-    // //if we are out of capacities
-    // if(mIndex_ + 1 >= sizeof(CAPACITIES)/sizeof(HASH_INDEX_T))
-    // {
-    //     throw std::logic_error("No capacities left for resizing");
-    // }
-
-    // //go to next prime number in capacities for resizing
-    // mIndex_++; 
-    // std::vector<HashItem*> prevTable = std::move(table_);
-    
-    // //new table with new size (capacities next)
-    // table_.assign(CAPACITIES[mIndex_], nullptr);
-    // //reset values of table
-    // currSize_ = 0;
-    // spotsUsed_ = 0;
-
-    // //rehash prev table with new table
-    // for(size_t i = 0; i < prevTable.size(); ++i)
-    // {
-    //     HashItem* item = prevTable[i];
-    //     //if it exists (not empty) and is not deleted
-    //     if(item && !item->deleted)
-    //     {
-    //         HASH_INDEX_T nLoc = probe(item->item.first);
-    //         if(nLoc != npos)
-    //         {
-    //             table_[nLoc] = new HashItem(item->item);
-    //             currSize_++;
-    //             spotsUsed_++;
-    //         }
-    //         // //insert
-    //         // insert(pair->item);
-    //     }
-    //     delete item;
-    // }
-
-    // Check if we are out of capacities
-    if (mIndex_ + 1 >= sizeof(CAPACITIES) / sizeof(HASH_INDEX_T)) {
+    //if we are out of capacities to resize from 
+    if(mIndex_ + 1 >= sizeof(CAPACITIES) / sizeof(HASH_INDEX_T)) 
+    {
         throw std::logic_error("No capacities left for resizing");
     }
 
-    // Move to the next prime number in CAPACITIES for resizing
+    //if thats not the case, resize with the next prime number in capacities
     mIndex_++;
-    std::vector<HashItem*> oldTable = table_;
+    std::vector<HashItem*> prevTable = table_;
     size_t oldSize = table_.size();
 
-    // Create a new table with the new size
+    //new table with the new prime number size
     table_.assign(CAPACITIES[mIndex_], nullptr);
-
-    // Reset size counters
+    //resest table values
     currSize_ = 0;
     spotsUsed_ = 0;
 
-    // Rehash all valid (non-deleted) items from the old table
-    for (size_t i = 0; i < oldSize; ++i) {
-        if (oldTable[i] != nullptr && !oldTable[i]->deleted) {
-            insert(oldTable[i]->item); // Reinsert into the new table
+    //rehash from old to new size
+    for(size_t i = 0; i < oldSize; ++i) 
+    {
+        //if it exists (not empty) and is not deleted
+        if(prevTable[i] != nullptr && !prevTable[i]->deleted) 
+        {
+            insert(prevTable[i]->item); 
         }
-        delete oldTable[i]; // Clean up old table memory
+        delete prevTable[i]; 
     }
     
 }
