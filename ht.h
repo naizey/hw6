@@ -360,8 +360,8 @@ void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 
 
     //check if resizing is necessary - if the load factor has gone above the threshold
-    double lf = static_cast<double>(spotsUsed_ + (table_[loc] == nullptr ? 1 : 0)) / static_cast<double>(table_.size());
-    if(lf >= resizeAlpha_)
+    double lf = double(spotsUsed_ + (table_[loc] == nullptr ? 1 : 0)) / double(table_.size());
+    if(lf > resizeAlpha_)
     {
         //if the number of spots used over table size is > threshold, resize
         resize();
