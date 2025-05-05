@@ -344,14 +344,6 @@ size_t HashTable<K,V,Prober,Hash,KEqual>::size() const
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 {
-    //check if resizing is necessary - if the load factor has gone above the threshold
-    double lf = double(spotsUsed_ + 1) / double(table_.size());
-    if(lf > resizeAlpha_)
-    {
-        //if the number of spots used over table size is > threshold, resize
-        resize();
-    }
-
     //if resize is not necessary, then insert
     //allocate a HashItem, if no loc is available, throw logic error
     HASH_INDEX_T loc = probe(p.first);
@@ -359,13 +351,36 @@ void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
     {
         throw std::logic_error("No location available to insert");
     }
-    //if there is no error thrown, can insert
-    //if spot is empty
-    if(table_[loc] == nullptr)
+    if(table_[loc] == nullptr || table_[loc]->deleted)
     {
-        table_[loc] = new HashItem(p); //allocate new HashItem
-        spotsUsed_++; //used another spot
-        currSize_++; //size increased
+        //check if resizing is necessary - if the load factor has gone above the threshold
+        double lf = double(spotsUsed_ + 1) / double(table_.size());
+        if(lf > resizeAlpha_)
+        {
+            //if the number of spots used over table size is > threshold, resize
+            resize();
+
+            loc = probe(p.first);
+            if(loc == npos)
+            {
+                throw std::logic_error("No loc available after resize");
+            }
+        }
+
+        //if there is no error thrown, can insert
+        //if spot is empty
+        if(table_[loc] == nullptr)
+        {
+            table_[loc] = new HashItem(p); //allocate new HashItem
+            spotsUsed_++; //used another spot
+            currSize_++; //size increased
+        }
+        else if(table_[loc]->deleted)
+        {
+            delete table_[loc];
+            table_[loc] = new HashItem(p); //allocate new HashItem
+            currSize_++; //size incr
+        }
     }
     //if its not, thats the old key value being stored, update the value to the new key value. 
     else
