@@ -468,7 +468,7 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
 
     //go to next prime number in capacities for resizing
     mIndex_++; 
-    vector<HashItem*> prevTable = move(table_);
+    std::vector<HashItem*> prevTable = std::move(table_);
     
     //new table with new size (capacities next)
     table_.assign(CAPACITIES[mIndex_], nullptr);
