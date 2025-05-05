@@ -484,7 +484,7 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
         if(pair != nullptr && !pair->deleted)
         {
             //insert
-            insert(!pair->item);
+            insert(pair->item);
         }
         delete pair;
     }
