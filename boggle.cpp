@@ -95,5 +95,39 @@ bool boggleHelper(const std::set<std::string>& dict, const std::set<std::string>
 								   std::string word, std::set<std::string>& result, unsigned int r, unsigned int c, int dr, int dc)
 {
 //add your solution here!
+	//check if the current position is out of bounds
+	if(r >= board.size() || c >= board.size())
+	{
+		return false;
+	}
+	//check if the current position is already visited
+	if(board[r][c] == ' ')
+	{
+		return false;
+	}
+	//add the current letter to the word
+	word += board[r][c];
+	
+	//if its not a prefix or a word
+	if(prefix.find(word) == prefix.end() && dict.find(word) == dict.end())
+	{
+		return false;
+	}
+
+	bool found = false; //true if a word is found
+	//still on the board
+	if(r + dr < board.size() && c + dc < board.size())
+	{
+		found = boggleHelper(dict, prefix, board, word, result, r + dr, c + dc, dr, dc);
+	}
+
+	//if at end of word and not found yet
+	if(!found && dict.find(word) != dict.end())
+	{
+		result.insert(word);
+		return true;
+	}
+
+	return found || (dict.find(word) != dict.end());
 
 }
