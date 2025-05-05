@@ -492,6 +492,8 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
     currSize_ = 0;
     spotsUsed_ = 0;
 
+    //ADDING 
+    std::vector<ItemType> rehash;
     //rehash prev table with new table
     for(size_t i = 0; i < prevTable.size(); ++i)
     {
@@ -500,9 +502,17 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
         if(pair != nullptr && !pair->deleted)
         {
             //insert
-            insert(pair->item);
+            //insert(pair->item);
+            //ADDING
+            rehash.push_back(pair->item);
         }
         delete pair;
+    }
+
+    //ADDING
+    for(size_t i = 0; i < rehash.size(); ++i)
+    {
+        insert(rehash[i]);
     }
     
 }
