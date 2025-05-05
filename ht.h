@@ -345,7 +345,7 @@ template<typename K, typename V, typename Prober, typename Hash, typename KEqual
 void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 {
     //check if resizing is necessary - if the load factor has gone above the threshold
-    if((double)(spotsUsed_ + 1) / table_.size() >= resizeAlpha_)
+    if((double)(currSize_ + 1) / table_.size() >= resizeAlpha_)
     {
         //if the number of spots used over table size is > threshold, resize
         resize();
