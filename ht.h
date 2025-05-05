@@ -539,7 +539,7 @@ void HashTable<K,V,Prober,Hash,KEqual>::resize()
             // //insert
             // insert(pair->item);
         }
-        delete pair;
+        delete item;
     }
     
 }
